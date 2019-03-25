@@ -1,0 +1,127 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+Fit a model using all of the available predictors to predict the weight of the baby (pounds). A description of the variables is below. Are the conditions of model validity satisfied? Explain which are and which aren't, and provide appropriate graphical support. 
+
+
+```{r}
+data <- read.csv("FinalData.csv")
+
+m1=lm((PinchingForce)~Weight + Sex + size,data=data)
+summary(m1)
+plot(m1)
+#1(a)
+# All three are not satisfied.
+# The residual plot shows a non-linear trend.
+# variance is not constant since the residual plot shows a fan shape where variance increasese 
+#The model is not normally distributed as the qq-plot has tails
+```
+
+```{r}
+invResPlot(m1) 
+#The transformation with minimum RSS is power to the 0.76.
+```
+
+
+```{r}
+#q3
+summary(powerTransform(m1))
+
+m2=lm(sqrt(PinchingForce)~Weight + Sex + size,data=data)
+plot(m2)
+summary(m2)
+#Square root the pinching forece.
+#
+```
+
+```{r}
+#q4
+
+#The second model is better since it is more normal as shown in qqplot.Also the scale-location plot shows residuals are spread equally along the predictor range. The tail on qq-plot also decrases.
+```
+
+```{r}
+#q5
+
+#In the midterm, we applied a t-test on pinching for on male and female and this is a simple regression. However, here we are doing a multiple regression and it is obvious that gender is relatively insignificant but size is the most significant factor.
+```
+
+
+```{r}
+#q6
+vif(m2)
+```
+
+
+```{r}
+#q7
+
+#The vif for size and weight is bigger than 5 and that shows that these two terms are correlated and conlinearity is an issue.
+```
+
+```{r}
+#question 8
+data$size = NULL
+head(data)
+library(leaps)
+bestss <- regsubsets(sqrt(PinchingForce)~., data=data)
+summary(bestss)
+bic <- summary(bestss)$bic
+p <- length(bic)
+plot(1:p, bic)
+lines(1:p, bic)
+plot(bestss)
+print(bic)
+m4=lm(sqrt(PinchingForce)~ThoraxLength + Weight + Sex + ClawLength + ClawHeight + ClawWeight, data = data)
+summary(m4)
+
+bestbkwd <-regsubsets(sqrt(PinchingForce)~.,data=data,method="backward")
+summary(bestbkwd)
+plot(bestbkwd)
+bic_b <- summary(bestbkwd)$bic
+p <- length(bic_b)
+plot(1:p, bic_b)
+lines(1:p, bic_b)
+print(bic_b)
+
+forw <-regsubsets(sqrt(PinchingForce)~.,data=data,method="forward")
+summary(forw)
+plot(forw)
+bic_f <- summary(forw)$bic
+p <- length(bic_f)
+plot(1:p, bic_f)
+lines(1:p, bic_f)
+print(bic_f)
+
+#The one with the smallest bic is the best subsets regression regression.
+#Bic=-75.88442
+
+n <- 23
+null_model = lm(sqrt(PinchingForce) ~ 1, data = data)
+full_model = lm(sqrt(PinchingForce) ~ ThoraxLength + Weight + Sex + ClawLength + ClawHeight + ClawWeight, data = data)
+
+
+print(step(full_model, scope = list(lower=null_model, upper=full_model),
+direction = "forward", k=log(n)))
+#formula is sqrt(PinchingForce)=-0.8519143+ThoraxLength * 0.0739130  +Weight  *  0.0001916 +Sex  *  0.0841290  +ClawLength  *  0.0217431  +ClawHeight  *  0.0797750  +ClawWeight  *  0.0108382
+
+best <- lm(sqrt(PinchingForce)~., data=data)
+summary(best)
+newdata <- data.frame(ThoraxLength = 52, Weight = 615, Sex = "M", ClawLength = 26, ClawWeight = 34, ClawHeight = 26)
+predict(best,newdata,interval = "predict")^2
+```
+
+```{r}
+#q9
+#(a) H0:All slope for the predictory variable are 0 and all variables are insignificant
+#    H1: At least one slope does not equal to 0 and at least one variable is significant.
+#(b) All the p-value is bigger than 0.05 so all the variables are insignificant
+```
+
+ 
+```{r}
+
+```
